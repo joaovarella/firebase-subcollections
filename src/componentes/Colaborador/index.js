@@ -3,7 +3,7 @@ import "./colaborador.css";
 
 const Colaborador = ({ colaborador, corDeFundo, aoDeletar, aoFavoritar }) => {
   function favoritar() {
-    aoFavoritar(colaborador.id);
+    aoFavoritar(colaborador.timeId, colaborador.funcionarioId);
   }
 
   const propsfavorito = {
@@ -11,13 +11,12 @@ const Colaborador = ({ colaborador, corDeFundo, aoDeletar, aoFavoritar }) => {
     onClick: favoritar,
   };
 
-
   return (
     <div className="colaborador">
       <AiFillCloseCircle
         size={25}
         className="deletar"
-        onClick={() => aoDeletar(colaborador.id)}
+        onClick={() => aoDeletar(colaborador.funcionarioId, colaborador.timeId)}
       />
       <div className="cabecalho" style={{ backgroundColor: corDeFundo }}>
         <img src={colaborador.imagem} alt={colaborador.nome} />

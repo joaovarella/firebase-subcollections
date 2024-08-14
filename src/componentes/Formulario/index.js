@@ -3,8 +3,21 @@ import Botao from "../Botao";
 import Campo from "../Campo";
 import ListaSuspensa from "../ListaSuspensa";
 import "./formulario.css";
+import { db } from "../../firebase/firebase";
+import {
+  doc,
+  updateDoc,
+  getDoc,
+  setDoc,
+  addDoc,
+  where,
+  query,
+  collection,
+  getDocs,
+} from "firebase/firestore";
+import { v4 as uuidv4 } from "uuid";
 
-const Formulario = ({ aoCadastrarTime, aoCadastrar, times }) => {
+const Formulario = ({ times }) => {
   const [nome, setNome] = useState("");
   const [cargo, setCargo] = useState("");
   const [imagem, setImagem] = useState("");
@@ -13,28 +26,60 @@ const Formulario = ({ aoCadastrarTime, aoCadastrar, times }) => {
   const [nomeTime, setNomeTime] = useState("");
   const [corTime, setCorTime] = useState("");
 
-  const aoSubmeter = (evento) => {
+  const aoSubmeter = async (evento) => {
     evento.preventDefault();
-    aoCadastrar({
-      nome,
-      cargo,
-      imagem,
-      time,
-    });
+
+    const q = query(collection(db, "times"), where("nome", "==", time));
+
+    try {
+      // Executa a consulta e obtém os documentos
+      const querySnapshot = await getDocs(q);
+
+      // Verifica se algum documento foi encontrado
+      if (querySnapshot.empty) {
+        console.log("Nenhum documento encontrado com o nome especificado.");
+        return;
+      }
+
+      console.log(querySnapshot);
+      // Obtém a referência ao primeiro documento encontrado
+      const docRef = querySnapshot.docs[0].ref;
+
+      // Adiciona uma subcoleção ao documento encontrado
+      const subcollectionRef = collection(docRef, "funcionarios"); // Nome da subcoleção
+
+      // Dados que você deseja adicionar à subcoleção
+      const novoFuncionario = {
+        nome,
+        cargo,
+        imagem,
+        time,
+      };
+
+      // Referência ao novo documento na subcoleção com um ID gerado automaticamente
+      const newDocRef = doc(subcollectionRef, uuidv4());
+
+      // Adiciona o novo documento à subcoleção
+      await setDoc(newDocRef, novoFuncionario);
+
+      console.log("Documento adicionado à subcoleção com sucesso!");
+    } catch (error) {
+      console.error("Erro ao buscar ou adicionar documento:", error);
+    }
   };
 
-  const criarTime = (evento) => {
+  const criarTime = async (evento) => {
     evento.preventDefault();
-    debugger;
-    aoCadastrarTime({
+    const userDocRef = doc(db, "times", uuidv4());
+    await setDoc(userDocRef, {
       nome: nomeTime,
-      cor: corTime,
+      cor: `${corTime}`,
     });
   };
 
   return (
     <section className="formulario-container">
-      <form className="formulario" onSubmit={aoSubmeter}>
+      <form className="formulario formulario1" onSubmit={aoSubmeter}>
         <h2>Preencha os dados para criar o card do colaborador.</h2>
         <Campo
           obrigatorio={true}
@@ -65,7 +110,7 @@ const Formulario = ({ aoCadastrarTime, aoCadastrar, times }) => {
         <Botao texto="Criar card" />
       </form>
 
-      <form className="formulario" onSubmit={criarTime}>
+      <form className="formulario formulario2" onSubmit={criarTime}>
         <h2>Preencha os dados para criar um novo time.</h2>
         <Campo
           obrigatorio={true}
